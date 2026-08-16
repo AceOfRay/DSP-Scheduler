@@ -1,0 +1,41 @@
+These are forms dedicated to building the SchedulingConstraint block
+
+Timespan
+    Start day
+    End day
+
+Specialist Needs
+    Personal appointments
+        Date time 
+    Starting location
+    Specialist working hours
+
+Patients to visit
+    Patients
+        Requested meeting times
+        Total number of hours 
+        Location of patient
+            Estimated time to travel to patient
+        
+Other constraints
+
+Page Ideas
+    Home page
+        Links to tools
+        Why use
+        
+    How to use
+        Explains usage
+    Sign up
+    Login
+    Patients page
+        List of previous patients with modifiable client information
+        Old patients i.e. patients that are no longer being tended to
+        New patients page
+    Past generated schedules
+
+
+
+
+
+
