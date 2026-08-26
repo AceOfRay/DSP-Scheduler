@@ -1,4 +1,3 @@
-import * as React from "react"
 
 import { format } from "date-fns"
 import { CalendarIcon } from "lucide-react"
@@ -23,15 +22,45 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 
-export function SchedulingRange() {
-  const [dateRange, setDateRange] =
-    React.useState<DateRange | undefined>()
+import type {
+  ScheduleConstraintBlockData,
+} from "@/models/schedule-constraint-block"
 
-  const [startTime, setStartTime] =
-    React.useState("08:00")
 
-  const [endTime, setEndTime] =
-    React.useState("17:00")
+
+type SchedulingRangeProps = {
+  data: ScheduleConstraintBlockData
+
+  onDateRangeChange: (
+    startDate: string | null,
+    endDate: string | null
+  ) => void
+
+  onStartTimeChange: (time: string) => void
+
+  onEndTimeChange: (time: string) => void
+}
+
+export function SchedulingRange({
+  data,
+  onDateRangeChange,
+  onStartTimeChange,
+  onEndTimeChange,
+}: SchedulingRangeProps) {
+
+  const dateRange: DateRange | undefined =
+    data.scheduleStartDate
+      ? {
+        from: new Date(
+          `${data.scheduleStartDate}T00:00:00`
+        ),
+        to: data.scheduleEndDate
+          ? new Date(
+            `${data.scheduleEndDate}T00:00:00`
+          )
+          : undefined,
+      }
+      : undefined
 
   return (
     <Card>
@@ -85,8 +114,16 @@ export function SchedulingRange() {
               <Calendar
                 mode="range"
                 selected={dateRange}
-                onSelect={setDateRange}
-                numberOfMonths={2}
+                onSelect={(range) => {
+                  onDateRangeChange(
+                    range?.from
+                      ? format(range.from, "yyyy-MM-dd")
+                      : null,
+                    range?.to
+                      ? format(range.to, "yyyy-MM-dd")
+                      : null
+                  )
+                }} numberOfMonths={2}
               />
             </PopoverContent>
           </Popover>
@@ -113,9 +150,9 @@ export function SchedulingRange() {
               <Input
                 id="schedule-start-time"
                 type="time"
-                value={startTime}
+                value={data.scheduleStartTime}
                 onChange={(event) =>
-                  setStartTime(event.target.value)
+                  onStartTimeChange(event.target.value)
                 }
               />
             </div>
@@ -128,9 +165,9 @@ export function SchedulingRange() {
               <Input
                 id="schedule-end-time"
                 type="time"
-                value={endTime}
+                value={data.scheduleEndTime}
                 onChange={(event) =>
-                  setEndTime(event.target.value)
+                  onEndTimeChange(event.target.value)
                 }
               />
             </div>

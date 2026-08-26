@@ -1,6 +1,8 @@
-import * as React from "react"
-
 import { Clock, Users } from "lucide-react"
+
+import type {
+  ScheduleConstraintBlockData,
+} from "@/models/schedule-constraint-block"
 
 import {
   Card,
@@ -21,31 +23,22 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-type ClientVisitRequirement = {
-  id: number
-  name: string
-  visitCount: number
-  visitLength: number
-}
-
-const initialClients: ClientVisitRequirement[] = [
+const activeClients = [
   {
     id: 1,
     name: "John Smith",
-    visitCount: 2,
-    visitLength: 90,
   },
   {
     id: 2,
     name: "Maria Garcia",
-    visitCount: 1,
-    visitLength: 120,
   },
   {
     id: 3,
     name: "David Johnson",
-    visitCount: 2,
-    visitLength: 60,
+  },
+  {
+    id: 4,
+    name: "Sarah Williams",
   },
 ]
 
@@ -80,9 +73,6 @@ const visitLengthOptions = [
   },
 ]
 
-// eventually add in functionality such that days that the user doesn't work 
-// are greyed out with highlight text that explain that the user doesn't work those days
-
 function formatMinutes(minutes: number) {
   const hours = Math.floor(minutes / 60)
   const remainingMinutes = minutes % 60
@@ -92,49 +82,50 @@ function formatMinutes(minutes: number) {
   }
 
   if (remainingMinutes === 0) {
-    return `${hours} hr${hours === 1 ? "" : "s"}`
+    return `${hours} hr${
+      hours === 1 ? "" : "s"
+    }`
   }
 
   return `${hours} hr ${remainingMinutes} min`
 }
 
-export function VisitRequirements() {
-  const [clients, setClients] =
-    React.useState<ClientVisitRequirement[]>(
-      initialClients
-    )
+type VisitRequirementsProps = {
+  data: ScheduleConstraintBlockData
 
-  function updateVisitCount(
+  onVisitCountChange: (
     clientId: number,
-    value: number
-  ) {
-    setClients((current) =>
-      current.map((client) =>
-        client.id === clientId
-          ? {
-              ...client,
-              visitCount: value,
-            }
-          : client
-      )
-    )
-  }
+    visitCount: number
+  ) => void
 
-  function updateVisitLength(
+  onVisitLengthChange: (
     clientId: number,
-    value: number
-  ) {
-    setClients((current) =>
-      current.map((client) =>
-        client.id === clientId
-          ? {
-              ...client,
-              visitLength: value,
-            }
-          : client
-      )
+    visitLength: number
+  ) => void
+}
+
+export function VisitRequirements({
+  data,
+  onVisitCountChange,
+  onVisitLengthChange,
+}: VisitRequirementsProps) {
+  const clients =
+    data.visitRequirements.map(
+      (requirement) => {
+        const client = activeClients.find(
+          (client) =>
+            client.id ===
+            requirement.clientId
+        )
+
+        return {
+          ...requirement,
+          name:
+            client?.name ??
+            `Client ${requirement.clientId}`,
+        }
+      }
     )
-  }
 
   const totalVisits = clients.reduce(
     (total, client) =>
@@ -145,7 +136,8 @@ export function VisitRequirements() {
   const totalMinutes = clients.reduce(
     (total, client) =>
       total +
-      client.visitCount * client.visitLength,
+      client.visitCount *
+        client.visitLength,
     0
   )
 
@@ -159,9 +151,9 @@ export function VisitRequirements() {
             </CardTitle>
 
             <CardDescription className="mt-1">
-              Define how often each client should be
-              visited and how long each visit should
-              last.
+              Define how often each client should
+              be visited and how long each visit
+              should last.
             </CardDescription>
           </div>
 
@@ -187,8 +179,8 @@ export function VisitRequirements() {
             </p>
 
             <p className="mt-1 text-sm text-muted-foreground">
-              Select clients before configuring visit
-              requirements.
+              Select clients before configuring
+              visit requirements.
             </p>
           </div>
         ) : (
@@ -200,7 +192,7 @@ export function VisitRequirements() {
 
               return (
                 <div
-                  key={client.id}
+                  key={client.clientId}
                   className="rounded-lg border p-4"
                 >
                   <div className="mb-4 flex items-center justify-between gap-4">
@@ -223,23 +215,26 @@ export function VisitRequirements() {
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
                       <Label
-                        htmlFor={`visit-count-${client.id}`}
+                        htmlFor={`visit-count-${client.clientId}`}
                       >
                         Visits Needed
                       </Label>
 
                       <Input
-                        id={`visit-count-${client.id}`}
+                        id={`visit-count-${client.clientId}`}
                         type="number"
                         min={1}
-                        value={client.visitCount}
+                        value={
+                          client.visitCount
+                        }
                         onChange={(event) =>
-                          updateVisitCount(
-                            client.id,
+                          onVisitCountChange(
+                            client.clientId,
                             Math.max(
                               1,
                               Number(
-                                event.target.value
+                                event.target
+                                  .value
                               )
                             )
                           )
@@ -257,8 +252,8 @@ export function VisitRequirements() {
                           client.visitLength
                         )}
                         onValueChange={(value) =>
-                          updateVisitLength(
-                            client.id,
+                          onVisitLengthChange(
+                            client.clientId,
                             Number(value)
                           )
                         }
@@ -271,12 +266,16 @@ export function VisitRequirements() {
                           {visitLengthOptions.map(
                             (option) => (
                               <SelectItem
-                                key={option.value}
+                                key={
+                                  option.value
+                                }
                                 value={String(
                                   option.value
                                 )}
                               >
-                                {option.label}
+                                {
+                                  option.label
+                                }
                               </SelectItem>
                             )
                           )}

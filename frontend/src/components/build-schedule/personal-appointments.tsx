@@ -1,6 +1,7 @@
 import * as React from "react"
 
 import { format } from "date-fns"
+
 import {
   CalendarIcon,
   Clock,
@@ -8,6 +9,11 @@ import {
   Plus,
   Trash2,
 } from "lucide-react"
+
+import type {
+  PersonalAppointment,
+  ScheduleConstraintBlockData,
+} from "@/models/schedule-constraint-block"
 
 import { cn } from "@/lib/utils"
 
@@ -41,26 +47,32 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 
-type Appointment = {
-  id: number
-  title: string
-  date: Date
-  startTime: string
-  endTime: string
-  location?: string
+type PersonalAppointmentsProps = {
+  data: ScheduleConstraintBlockData
+
+  onAddAppointment: (
+    appointment: PersonalAppointment
+  ) => void
+
+  onRemoveAppointment: (id: string) => void
 }
 
-export function PersonalAppointments() {
-  const [appointments, setAppointments] =
-    React.useState<Appointment[]>([])
-
+export function PersonalAppointments({
+  data,
+  onAddAppointment,
+  onRemoveAppointment,
+}: PersonalAppointmentsProps) {
   const [open, setOpen] = React.useState(false)
 
   const [title, setTitle] = React.useState("")
-  const [date, setDate] = React.useState<Date | undefined>()
-  const [startTime, setStartTime] = React.useState("")
-  const [endTime, setEndTime] = React.useState("")
-  const [location, setLocation] = React.useState("")
+  const [date, setDate] =
+    React.useState<Date | undefined>()
+  const [startTime, setStartTime] =
+    React.useState("")
+  const [endTime, setEndTime] =
+    React.useState("")
+  const [location, setLocation] =
+    React.useState("")
 
   function resetForm() {
     setTitle("")
@@ -71,34 +83,28 @@ export function PersonalAppointments() {
   }
 
   function addAppointment() {
-    if (!title || !date || !startTime || !endTime) {
+    if (
+      !title ||
+      !date ||
+      !startTime ||
+      !endTime
+    ) {
       return
     }
 
-    const appointment: Appointment = {
-      id: Date.now(),
+    const appointment: PersonalAppointment = {
+      id: crypto.randomUUID(),
       title,
-      date,
+      date: format(date, "yyyy-MM-dd"),
       startTime,
       endTime,
       location: location || undefined,
     }
 
-    setAppointments((current) => [
-      ...current,
-      appointment,
-    ])
+    onAddAppointment(appointment)
 
     resetForm()
     setOpen(false)
-  }
-
-  function removeAppointment(id: number) {
-    setAppointments((current) =>
-      current.filter(
-        (appointment) => appointment.id !== id
-      )
-    )
   }
 
   return (
@@ -111,8 +117,8 @@ export function PersonalAppointments() {
             </CardTitle>
 
             <CardDescription className="mt-1">
-              Add personal commitments that the scheduler
-              should work around.
+              Add personal commitments that the
+              scheduler should work around.
             </CardDescription>
           </div>
 
@@ -140,8 +146,8 @@ export function PersonalAppointments() {
                 </DialogTitle>
 
                 <DialogDescription>
-                  Block off time that should not be used
-                  for client visits.
+                  Block off time that should not be
+                  used for client visits.
                 </DialogDescription>
               </DialogHeader>
 
@@ -162,9 +168,7 @@ export function PersonalAppointments() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>
-                    Date
-                  </Label>
+                  <Label>Date</Label>
 
                   <Popover>
                     <PopoverTrigger>
@@ -181,7 +185,9 @@ export function PersonalAppointments() {
                         {date ? (
                           format(date, "PPP")
                         ) : (
-                          <span>Select a date</span>
+                          <span>
+                            Select a date
+                          </span>
                         )}
                       </Button>
                     </PopoverTrigger>
@@ -194,7 +200,6 @@ export function PersonalAppointments() {
                         mode="single"
                         selected={date}
                         onSelect={setDate}
-                        
                       />
                     </PopoverContent>
                   </Popover>
@@ -281,7 +286,7 @@ export function PersonalAppointments() {
       </CardHeader>
 
       <CardContent>
-        {appointments.length === 0 ? (
+        {data.personalAppointments.length === 0 ? (
           <div className="flex min-h-32 flex-col items-center justify-center rounded-lg border border-dashed p-6 text-center">
             <CalendarIcon className="mb-3 h-8 w-8 text-muted-foreground" />
 
@@ -297,57 +302,61 @@ export function PersonalAppointments() {
           </div>
         ) : (
           <div className="space-y-3">
-            {appointments.map((appointment) => (
-              <div
-                key={appointment.id}
-                className="flex items-start justify-between gap-4 rounded-lg border p-4"
-              >
-                <div className="min-w-0">
-                  <p className="font-medium">
-                    {appointment.title}
-                  </p>
+            {data.personalAppointments.map(
+              (appointment) => (
+                <div
+                  key={appointment.id}
+                  className="flex items-start justify-between gap-4 rounded-lg border p-4"
+                >
+                  <div className="min-w-0">
+                    <p className="font-medium">
+                      {appointment.title}
+                    </p>
 
-                  <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1.5">
-                      <CalendarIcon className="h-4 w-4" />
+                    <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-1.5">
+                        <CalendarIcon className="h-4 w-4" />
 
-                      {format(
-                        appointment.date,
-                        "EEE, MMM d"
+                        {format(
+                          new Date(
+                            `${appointment.date}T00:00:00`
+                          ),
+                          "EEE, MMM d"
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-1.5">
+                        <Clock className="h-4 w-4" />
+
+                        {appointment.startTime}
+                        {" - "}
+                        {appointment.endTime}
+                      </div>
+
+                      {appointment.location && (
+                        <div className="flex items-center gap-1.5">
+                          <MapPin className="h-4 w-4" />
+
+                          {appointment.location}
+                        </div>
                       )}
                     </div>
-
-                    <div className="flex items-center gap-1.5">
-                      <Clock className="h-4 w-4" />
-
-                      {appointment.startTime}
-                      {" - "}
-                      {appointment.endTime}
-                    </div>
-
-                    {appointment.location && (
-                      <div className="flex items-center gap-1.5">
-                        <MapPin className="h-4 w-4" />
-
-                        {appointment.location}
-                      </div>
-                    )}
                   </div>
-                </div>
 
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() =>
-                    removeAppointment(
-                      appointment.id
-                    )
-                  }
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() =>
+                      onRemoveAppointment(
+                        appointment.id
+                      )
+                    }
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              )
+            )}
           </div>
         )}
       </CardContent>

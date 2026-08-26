@@ -1,11 +1,13 @@
-import * as React from "react"
-
 import {
   CalendarRange,
   Clock3,
   Route,
   Sparkles,
 } from "lucide-react"
+
+import type {
+  ScheduleConstraintBlockData,
+} from "@/models/schedule-constraint-block"
 
 import {
   Card,
@@ -26,35 +28,59 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-export function SchedulingPreferences() {
-  const [minimizeDriving, setMinimizeDriving] =
-    React.useState(true)
+type SchedulingPreferencesProps = {
+  data: ScheduleConstraintBlockData
 
-  const [groupNearbyClients, setGroupNearbyClients] =
-    React.useState(true)
+  onMinimizeDrivingChange: (
+    enabled: boolean
+  ) => void
 
-  const [avoidLargeGaps, setAvoidLargeGaps] =
-    React.useState(true)
+  onGroupNearbyClientsChange: (
+    enabled: boolean
+  ) => void
 
-  const [balanceWorkload, setBalanceWorkload] =
-    React.useState(true)
+  onAvoidLargeGapsChange: (
+    enabled: boolean
+  ) => void
 
-  const [preferMornings, setPreferMornings] =
-    React.useState(false)
+  onBalanceWorkloadChange: (
+    enabled: boolean
+  ) => void
 
-  const [preferAfternoons, setPreferAfternoons] =
-    React.useState(false)
+  onPreferMorningsChange: (
+    enabled: boolean
+  ) => void
 
+  onPreferAfternoonsChange: (
+    enabled: boolean
+  ) => void
+
+  onScheduleStyleChange: (
+    style: "compact" | "balanced" | "relaxed"
+  ) => void
+}
+
+export function SchedulingPreferences({
+  data,
+  onMinimizeDrivingChange,
+  onGroupNearbyClientsChange,
+  onAvoidLargeGapsChange,
+  onBalanceWorkloadChange,
+  onPreferMorningsChange,
+  onPreferAfternoonsChange,
+  onScheduleStyleChange,
+}: SchedulingPreferencesProps) {
   return (
     <Card>
       <CardHeader>
         <CardTitle>
-          7. Scheduling Preferences
+          5. Scheduling Preferences
         </CardTitle>
 
         <CardDescription>
-          Tell the scheduler how you would prefer your client visits
-          to be arranged when multiple schedules are possible.
+          Tell the scheduler how you would prefer
+          your client visits to be arranged when
+          multiple schedules are possible.
         </CardDescription>
       </CardHeader>
 
@@ -69,7 +95,8 @@ export function SchedulingPreferences() {
               </h3>
 
               <p className="text-sm text-muted-foreground">
-                Reduce unnecessary travel between client visits.
+                Reduce unnecessary travel between
+                client visits.
               </p>
             </div>
           </div>
@@ -78,9 +105,11 @@ export function SchedulingPreferences() {
             <div className="flex items-start gap-3">
               <Checkbox
                 id="minimize-driving"
-                checked={minimizeDriving}
+                checked={data.minimizeDriving}
                 onCheckedChange={(checked) =>
-                  setMinimizeDriving(checked === true)
+                  onMinimizeDrivingChange(
+                    checked === true
+                  )
                 }
               />
 
@@ -93,7 +122,8 @@ export function SchedulingPreferences() {
                 </Label>
 
                 <p className="text-sm text-muted-foreground">
-                  Prefer schedules that reduce total travel time.
+                  Prefer schedules that reduce total
+                  travel time.
                 </p>
               </div>
             </div>
@@ -101,9 +131,13 @@ export function SchedulingPreferences() {
             <div className="flex items-start gap-3">
               <Checkbox
                 id="group-nearby-clients"
-                checked={groupNearbyClients}
+                checked={
+                  data.groupNearbyClients
+                }
                 onCheckedChange={(checked) =>
-                  setGroupNearbyClients(checked === true)
+                  onGroupNearbyClientsChange(
+                    checked === true
+                  )
                 }
               />
 
@@ -116,7 +150,8 @@ export function SchedulingPreferences() {
                 </Label>
 
                 <p className="text-sm text-muted-foreground">
-                  Prefer visiting clients in similar areas on the same day.
+                  Prefer visiting clients in similar
+                  areas on the same day.
                 </p>
               </div>
             </div>
@@ -133,7 +168,8 @@ export function SchedulingPreferences() {
               </h3>
 
               <p className="text-sm text-muted-foreground">
-                Control how work is distributed throughout the week.
+                Control how work is distributed
+                throughout the week.
               </p>
             </div>
           </div>
@@ -142,9 +178,11 @@ export function SchedulingPreferences() {
             <div className="flex items-start gap-3">
               <Checkbox
                 id="avoid-large-gaps"
-                checked={avoidLargeGaps}
+                checked={data.avoidLargeGaps}
                 onCheckedChange={(checked) =>
-                  setAvoidLargeGaps(checked === true)
+                  onAvoidLargeGapsChange(
+                    checked === true
+                  )
                 }
               />
 
@@ -157,8 +195,8 @@ export function SchedulingPreferences() {
                 </Label>
 
                 <p className="text-sm text-muted-foreground">
-                  Prefer compact workdays instead of long periods of
-                  unused time.
+                  Prefer compact workdays instead
+                  of long periods of unused time.
                 </p>
               </div>
             </div>
@@ -166,9 +204,11 @@ export function SchedulingPreferences() {
             <div className="flex items-start gap-3">
               <Checkbox
                 id="balance-workload"
-                checked={balanceWorkload}
+                checked={data.balanceWorkload}
                 onCheckedChange={(checked) =>
-                  setBalanceWorkload(checked === true)
+                  onBalanceWorkloadChange(
+                    checked === true
+                  )
                 }
               />
 
@@ -181,8 +221,8 @@ export function SchedulingPreferences() {
                 </Label>
 
                 <p className="text-sm text-muted-foreground">
-                  Avoid heavily loading one day when visits could be
-                  spread more evenly.
+                  Avoid heavily loading one day when
+                  visits could be spread more evenly.
                 </p>
               </div>
             </div>
@@ -199,7 +239,8 @@ export function SchedulingPreferences() {
               </h3>
 
               <p className="text-sm text-muted-foreground">
-                Optionally favor certain parts of the day.
+                Optionally favor certain parts of
+                the day.
               </p>
             </div>
           </div>
@@ -208,16 +249,12 @@ export function SchedulingPreferences() {
             <div className="flex items-start gap-3">
               <Checkbox
                 id="prefer-mornings"
-                checked={preferMornings}
-                onCheckedChange={(checked) => {
-                  const enabled = checked === true
-
-                  setPreferMornings(enabled)
-
-                  if (enabled) {
-                    setPreferAfternoons(false)
-                  }
-                }}
+                checked={data.preferMornings}
+                onCheckedChange={(checked) =>
+                  onPreferMorningsChange(
+                    checked === true
+                  )
+                }
               />
 
               <div className="space-y-1">
@@ -229,7 +266,8 @@ export function SchedulingPreferences() {
                 </Label>
 
                 <p className="text-sm text-muted-foreground">
-                  Schedule client visits earlier in the day when possible.
+                  Schedule client visits earlier in
+                  the day when possible.
                 </p>
               </div>
             </div>
@@ -237,16 +275,12 @@ export function SchedulingPreferences() {
             <div className="flex items-start gap-3">
               <Checkbox
                 id="prefer-afternoons"
-                checked={preferAfternoons}
-                onCheckedChange={(checked) => {
-                  const enabled = checked === true
-
-                  setPreferAfternoons(enabled)
-
-                  if (enabled) {
-                    setPreferMornings(false)
-                  }
-                }}
+                checked={data.preferAfternoons}
+                onCheckedChange={(checked) =>
+                  onPreferAfternoonsChange(
+                    checked === true
+                  )
+                }
               />
 
               <div className="space-y-1">
@@ -258,7 +292,8 @@ export function SchedulingPreferences() {
                 </Label>
 
                 <p className="text-sm text-muted-foreground">
-                  Schedule client visits later in the day when possible.
+                  Schedule client visits later in
+                  the day when possible.
                 </p>
               </div>
             </div>
@@ -275,7 +310,8 @@ export function SchedulingPreferences() {
               </h3>
 
               <p className="text-sm text-muted-foreground">
-                Choose the overall style you want the scheduler to favor.
+                Choose the overall style you want
+                the scheduler to favor.
               </p>
             </div>
           </div>
@@ -285,7 +321,17 @@ export function SchedulingPreferences() {
               Preferred Schedule Style
             </Label>
 
-            <Select defaultValue="balanced">
+            <Select
+              value={data.scheduleStyle}
+              onValueChange={(value) =>
+                onScheduleStyleChange(
+                  value as
+                    | "compact"
+                    | "balanced"
+                    | "relaxed"
+                )
+              }
+            >
               <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>
@@ -306,8 +352,9 @@ export function SchedulingPreferences() {
             </Select>
 
             <p className="text-sm text-muted-foreground">
-              Compact schedules reduce downtime, while relaxed schedules
-              leave more space between commitments.
+              Compact schedules reduce downtime,
+              while relaxed schedules leave more
+              space between commitments.
             </p>
           </div>
         </div>

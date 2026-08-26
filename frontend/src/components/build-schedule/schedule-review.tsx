@@ -17,31 +17,74 @@ import {
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 
-export function ScheduleReview() {
-  const summary = {
-    dateRange: "Aug 31, 2026 - Sep 6, 2026",
-    workingDays: 5,
-    selectedClients: 3,
-    totalVisits: 5,
-    totalClientTime: "7 hrs",
-    personalAppointments: 2,
-    travelBuffer: "30 min",
-    documentationBuffer: "15 min",
+import type {
+  ScheduleConstraintBlockData,
+} from "@/models/schedule-constraint-block"
+
+type ScheduleReviewProps = {
+  data: ScheduleConstraintBlockData
+
+  summary: {
+  scheduleStartDate: string | null
+  scheduleEndDate: string | null
+  selectedClients: number
+  personalAppointments: number
+  travelBuffer: number
+  documentationBuffer: number
+}
+
+  warnings: string[]
+
+  onBuildSchedule: () => void
+}
+
+function formatMinutes(minutes: number) {
+  const hours = Math.floor(minutes / 60)
+  const remainingMinutes = minutes % 60
+
+  if (hours === 0) {
+    return `${remainingMinutes} min`
   }
 
-  const warnings = [
-    "Maria Garcia only has one available window for a 2 hour visit.",
-  ]
+  if (remainingMinutes === 0) {
+    return `${hours} hr${hours === 1 ? "" : "s"}`
+  }
+
+  return `${hours} hr ${remainingMinutes} min`
+}
+
+function formatDateRange(
+  startDate: string | null,
+  endDate: string | null
+) {
+  if (!startDate || !endDate) {
+    return "Not configured"
+  }
+
+  const start = new Date(`${startDate}T00:00:00`)
+  const end = new Date(`${endDate}T00:00:00`)
+
+  return `${start.toLocaleDateString()} - ${end.toLocaleDateString()}`
+}
+
+export function ScheduleReview({
+  data,
+  summary,
+  warnings,
+  onBuildSchedule,
+}: ScheduleReviewProps) {
+  const readyToBuild = warnings.length === 0
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>
-          8. Review & Build
+          6. Review & Build
         </CardTitle>
 
         <CardDescription>
-          Review your scheduling setup before generating the schedule.
+          Review your scheduling setup before
+          generating the schedule.
         </CardDescription>
       </CardHeader>
 
@@ -57,11 +100,16 @@ export function ScheduleReview() {
                 </p>
 
                 <p className="mt-1 font-medium">
-                  {summary.dateRange}
+                  {formatDateRange(
+                    summary.scheduleStartDate,
+                    summary.scheduleEndDate
+                  )}
                 </p>
 
                 <p className="mt-1 text-sm text-muted-foreground">
-                  {summary.workingDays} working days
+                  {data.scheduleStartTime}
+                  {" - "}
+                  {data.scheduleEndTime}
                 </p>
               </div>
             </div>
@@ -77,12 +125,10 @@ export function ScheduleReview() {
                 </p>
 
                 <p className="mt-1 font-medium">
-                  {summary.selectedClients} selected clients
+                  {summary.selectedClients} selected
+                  clients
                 </p>
 
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {summary.totalVisits} total visits
-                </p>
               </div>
             </div>
           </div>
@@ -94,10 +140,6 @@ export function ScheduleReview() {
               <div>
                 <p className="text-sm text-muted-foreground">
                   Client Time
-                </p>
-
-                <p className="mt-1 font-medium">
-                  {summary.totalClientTime}
                 </p>
 
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -142,7 +184,9 @@ export function ScheduleReview() {
               </p>
 
               <p className="font-medium">
-                {summary.travelBuffer}
+                {formatMinutes(
+                  summary.travelBuffer
+                )}
               </p>
             </div>
 
@@ -152,7 +196,9 @@ export function ScheduleReview() {
               </p>
 
               <p className="font-medium">
-                {summary.documentationBuffer}
+                {formatMinutes(
+                  summary.documentationBuffer
+                )}
               </p>
             </div>
           </div>
@@ -175,7 +221,8 @@ export function ScheduleReview() {
                 </p>
 
                 <p className="mt-1 text-sm text-muted-foreground">
-                  No obvious conflicts were found in the current configuration.
+                  No obvious conflicts were found
+                  in the current configuration.
                 </p>
               </div>
             </div>
@@ -212,12 +259,17 @@ export function ScheduleReview() {
             </p>
 
             <p className="text-sm text-muted-foreground">
-              The scheduler will use the constraints and preferences above
-              to build the best available schedule.
+              The scheduler will use the constraints
+              and preferences above to build the best
+              available schedule.
             </p>
           </div>
 
-          <Button size="lg">
+          <Button
+            size="lg"
+            disabled={!readyToBuild}
+            onClick={onBuildSchedule}
+          >
             Build Schedule
           </Button>
         </div>

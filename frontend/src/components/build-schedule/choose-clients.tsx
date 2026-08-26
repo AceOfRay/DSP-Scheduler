@@ -1,8 +1,11 @@
-import * as React from "react"
-
 import { Check, Users } from "lucide-react"
 
+import type {
+  ScheduleConstraintBlockData,
+} from "@/models/schedule-constraint-block"
+
 import { Button } from "@/components/ui/button"
+
 import {
   Card,
   CardContent,
@@ -10,6 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 
@@ -40,32 +44,56 @@ const activeClients = [
   },
 ]
 
-export function ChooseClients() {
-  const [selectedClientIds, setSelectedClientIds] =
-    React.useState<number[]>([])
+type ChooseClientsProps = {
+  data: ScheduleConstraintBlockData
+
+  onAddClient: (clientId: number) => void
+
+  onRemoveClient: (clientId: number) => void
+
+  onSetSelectedClients: (
+    clientIds: number[]
+  ) => void
+}
+
+export function ChooseClients({
+  data,
+  onAddClient,
+  onRemoveClient,
+  onSetSelectedClients,
+}: ChooseClientsProps) {
+  const selectedClientIds =
+    data.selectedClientIds
 
   function toggleClient(clientId: number) {
-    setSelectedClientIds((current) =>
-      current.includes(clientId)
-        ? current.filter((id) => id !== clientId)
-        : [...current, clientId]
-    )
+    const selected =
+      selectedClientIds.includes(clientId)
+
+    if (selected) {
+      onRemoveClient(clientId)
+    } else {
+      onAddClient(clientId)
+    }
   }
 
   function toggleAllClients() {
-    if (selectedClientIds.length === activeClients.length) {
-      setSelectedClientIds([])
+    if (
+      selectedClientIds.length ===
+      activeClients.length
+    ) {
+      onSetSelectedClients([])
       return
     }
 
-    setSelectedClientIds(
+    onSetSelectedClients(
       activeClients.map((client) => client.id)
     )
   }
 
   const allSelected =
     activeClients.length > 0 &&
-    selectedClientIds.length === activeClients.length
+    selectedClientIds.length ===
+      activeClients.length
 
   return (
     <Card>
@@ -77,7 +105,8 @@ export function ChooseClients() {
             </CardTitle>
 
             <CardDescription className="mt-1">
-              Select the active clients you want included in this schedule.
+              Select the active clients you want
+              included in this schedule.
             </CardDescription>
           </div>
 
@@ -97,7 +126,8 @@ export function ChooseClients() {
             </p>
 
             <p className="mt-1 text-sm text-muted-foreground">
-              Activate or add a client before building a schedule.
+              Activate or add a client before
+              building a schedule.
             </p>
           </div>
         ) : (
@@ -117,7 +147,9 @@ export function ChooseClients() {
             <div className="space-y-2">
               {activeClients.map((client) => {
                 const selected =
-                  selectedClientIds.includes(client.id)
+                  selectedClientIds.includes(
+                    client.id
+                  )
 
                 return (
                   <div
@@ -173,8 +205,9 @@ export function ChooseClients() {
           </Button>
 
           <p className="mt-2 text-sm text-muted-foreground">
-            This can later save the current schedule as a draft before
-            taking you to the Add Client page.
+            This can later save the current
+            schedule as a draft before taking you
+            to the Add Client page.
           </p>
         </div>
       </CardContent>

@@ -1,13 +1,15 @@
-import * as React from "react"
-
 import { Clock3, Route } from "lucide-react"
 
+import type {
+  ScheduleConstraintBlockData,
+} from "@/models/schedule-constraint-block"
+
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
 } from "@/components/ui/card"
 
 import { Checkbox } from "@/components/ui/checkbox"
@@ -15,265 +17,315 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select"
 
 const bufferOptions = [
-    {
-        label: "No buffer",
-        value: "0",
-    },
-    {
-        label: "15 minutes",
-        value: "15",
-    },
-    {
-        label: "30 minutes",
-        value: "30",
-    },
-    {
-        label: "45 minutes",
-        value: "45",
-    },
-    {
-        label: "1 hour",
-        value: "60",
-    },
+  {
+    label: "No buffer",
+    value: 0,
+  },
+  {
+    label: "15 minutes",
+    value: 15,
+  },
+  {
+    label: "30 minutes",
+    value: 30,
+  },
+  {
+    label: "45 minutes",
+    value: 45,
+  },
+  {
+    label: "1 hour",
+    value: 60,
+  },
 ]
 
-export function VisitRules() {
-    const [travelBuffer, setTravelBuffer] =
-        React.useState("30")
+type VisitRulesProps = {
+  data: ScheduleConstraintBlockData
 
-    const [documentationBuffer, setDocumentationBuffer] =
-        React.useState("15")
+  onTravelBufferChange: (minutes: number) => void
 
-    const [allowBackToBack, setAllowBackToBack] =
-        React.useState(false)
+  onDocumentationBufferChange: (
+    minutes: number
+  ) => void
 
-    const [allowSameClientSameDay, setAllowSameClientSameDay] =
-        React.useState(false)
+  onAllowBackToBackChange: (
+    allow: boolean
+  ) => void
 
-    const [allowSplitVisits, setAllowSplitVisits] =
-        React.useState(false)
+  onAllowSameClientSameDayChange: (
+    allow: boolean
+  ) => void
 
-    const [maxVisitsPerDay, setMaxVisitsPerDay] =
-        React.useState("")
+  onAllowSplitVisitsChange: (
+    allow: boolean
+  ) => void
 
-    return (
-        <Card>
-            <CardHeader>
-                <CardTitle>
-                    6. Visit Rules & Travel Buffer
-                </CardTitle>
+  onMaxVisitsPerDayChange: (
+    maxVisits: number | null
+  ) => void
+}
 
-                <CardDescription>
-                    Set general rules for how client visits should be arranged
-                    throughout the schedule.
-                </CardDescription>
-            </CardHeader>
+export function VisitRules({
+  data,
+  onTravelBufferChange,
+  onDocumentationBufferChange,
+  onAllowBackToBackChange,
+  onAllowSameClientSameDayChange,
+  onAllowSplitVisitsChange,
+  onMaxVisitsPerDayChange,
+}: VisitRulesProps) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>
+          4. Visit Rules & Travel Buffer
+        </CardTitle>
 
-            <CardContent className="space-y-6">
-                <div className="space-y-4">
-                    <div className="flex items-start gap-3">
-                        <Route className="mt-0.5 h-5 w-5 text-muted-foreground" />
+        <CardDescription>
+          Set general rules for how client visits
+          should be arranged throughout the
+          schedule.
+        </CardDescription>
+      </CardHeader>
 
-                        <div>
-                            <h3 className="font-medium">
-                                Travel Buffer
-                            </h3>
+      <CardContent className="space-y-6">
+        <div className="space-y-4">
+          <div className="flex items-start gap-3">
+            <Route className="mt-0.5 h-5 w-5 text-muted-foreground" />
 
-                            <p className="text-sm text-muted-foreground">
-                                Leave time between client visits for travel.
-                            </p>
-                        </div>
-                    </div>
+            <div>
+              <h3 className="font-medium">
+                Travel Buffer
+              </h3>
 
-                    <div className="max-w-sm space-y-2">
-                        <Label>
-                            Default Travel Time
-                        </Label>
+              <p className="text-sm text-muted-foreground">
+                Leave time between client visits
+                for travel.
+              </p>
+            </div>
+          </div>
 
-                        <Select
-                            value={travelBuffer}
-                        >
-                            <SelectTrigger className="w-full">
-                                <SelectValue />
-                            </SelectTrigger>
+          <div className="max-w-sm space-y-2">
+            <Label>Default Travel Time</Label>
 
-                            <SelectContent>
-                                {bufferOptions.map((option) => (
-                                    <SelectItem
-                                        key={option.value}
-                                        value={option.value}
-                                    >
-                                        {option.label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </div>
+            <Select
+              value={String(data.travelBuffer)}
+              onValueChange={(value) =>
+                onTravelBufferChange(
+                  Number(value)
+                )
+              }
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
 
-                <div className="border-t pt-6">
-                    <div className="mb-4 flex items-start gap-3">
-                        <Clock3 className="mt-0.5 h-5 w-5 text-muted-foreground" />
+              <SelectContent>
+                {bufferOptions.map((option) => (
+                  <SelectItem
+                    key={option.value}
+                    value={String(option.value)}
+                  >
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
 
-                        <div>
-                            <h3 className="font-medium">
-                                Visit Spacing
-                            </h3>
+        <div className="border-t pt-6">
+          <div className="mb-4 flex items-start gap-3">
+            <Clock3 className="mt-0.5 h-5 w-5 text-muted-foreground" />
 
-                            <p className="text-sm text-muted-foreground">
-                                Control how tightly client visits can be scheduled.
-                            </p>
-                        </div>
-                    </div>
+            <div>
+              <h3 className="font-medium">
+                Visit Spacing
+              </h3>
 
-                    <div className="space-y-4">
-                        <div className="flex items-start gap-3">
-                            <Checkbox
-                                id="allow-back-to-back"
-                                checked={allowBackToBack}
-                                onCheckedChange={(checked) =>
-                                    setAllowBackToBack(checked === true)
-                                }
-                            />
+              <p className="text-sm text-muted-foreground">
+                Control how tightly client visits
+                can be scheduled.
+              </p>
+            </div>
+          </div>
 
-                            <div className="space-y-1">
-                                <Label
-                                    htmlFor="allow-back-to-back"
-                                    className="cursor-pointer"
-                                >
-                                    Allow back-to-back visits
-                                </Label>
+          <div className="space-y-4">
+            <div className="flex items-start gap-3">
+              <Checkbox
+                id="allow-back-to-back"
+                checked={data.allowBackToBack}
+                onCheckedChange={(checked) =>
+                  onAllowBackToBackChange(
+                    checked === true
+                  )
+                }
+              />
 
-                                <p className="text-sm text-muted-foreground">
-                                    Client visits may be scheduled immediately next to
-                                    each other if travel time allows.
-                                </p>
-                            </div>
-                        </div>
+              <div className="space-y-1">
+                <Label
+                  htmlFor="allow-back-to-back"
+                  className="cursor-pointer"
+                >
+                  Allow back-to-back visits
+                </Label>
 
-                        <div className="flex items-start gap-3">
-                            <Checkbox
-                                id="same-client-same-day"
-                                checked={allowSameClientSameDay}
-                                onCheckedChange={(checked) =>
-                                    setAllowSameClientSameDay(
-                                        checked === true
-                                    )
-                                }
-                            />
+                <p className="text-sm text-muted-foreground">
+                  Client visits may be scheduled
+                  immediately next to each other if
+                  travel time allows.
+                </p>
+              </div>
+            </div>
 
-                            <div className="space-y-1">
-                                <Label
-                                    htmlFor="same-client-same-day"
-                                    className="cursor-pointer"
-                                >
-                                    Allow multiple visits with the same client in one day
-                                </Label>
+            <div className="flex items-start gap-3">
+              <Checkbox
+                id="same-client-same-day"
+                checked={
+                  data.allowSameClientSameDay
+                }
+                onCheckedChange={(checked) =>
+                  onAllowSameClientSameDayChange(
+                    checked === true
+                  )
+                }
+              />
 
-                                <p className="text-sm text-muted-foreground">
-                                    The scheduler may schedule more than one visit with the
-                                    same client on the same date.
-                                </p>
-                            </div>
-                        </div>
+              <div className="space-y-1">
+                <Label
+                  htmlFor="same-client-same-day"
+                  className="cursor-pointer"
+                >
+                  Allow multiple visits with the
+                  same client in one day
+                </Label>
 
-                        <div className="flex items-start gap-3">
-                            <Checkbox
-                                id="split-visits"
-                                checked={allowSplitVisits}
-                                onCheckedChange={(checked) =>
-                                    setAllowSplitVisits(checked === true)
-                                }
-                            />
+                <p className="text-sm text-muted-foreground">
+                  The scheduler may schedule more
+                  than one visit with the same
+                  client on the same date.
+                </p>
+              </div>
+            </div>
 
-                            <div className="space-y-1">
-                                <Label
-                                    htmlFor="split-visits"
-                                    className="cursor-pointer"
-                                >
-                                    Allow visits to be split
-                                </Label>
+            <div className="flex items-start gap-3">
+              <Checkbox
+                id="split-visits"
+                checked={data.allowSplitVisits}
+                onCheckedChange={(checked) =>
+                  onAllowSplitVisitsChange(
+                    checked === true
+                  )
+                }
+              />
 
-                                <p className="text-sm text-muted-foreground">
-                                    A required visit may be divided into smaller blocks
-                                    when necessary.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+              <div className="space-y-1">
+                <Label
+                  htmlFor="split-visits"
+                  className="cursor-pointer"
+                >
+                  Allow visits to be split
+                </Label>
 
-                <div className="border-t pt-6">
-                    <h3 className="font-medium">
-                        Additional Time
-                    </h3>
+                <p className="text-sm text-muted-foreground">
+                  A required visit may be divided
+                  into smaller blocks when
+                  necessary.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
 
-                    <p className="mt-1 text-sm text-muted-foreground">
-                        Reserve time around client visits for administrative work.
-                    </p>
+        <div className="border-t pt-6">
+          <h3 className="font-medium">
+            Additional Time
+          </h3>
 
-                    <div className="mt-4 max-w-sm space-y-2">
-                        <Label>
-                            Documentation Buffer
-                        </Label>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Reserve time around client visits for
+            administrative work.
+          </p>
 
-                        <Select
-                            value={documentationBuffer}
-                        >
-                            <SelectTrigger className="w-full">
-                                <SelectValue />
-                            </SelectTrigger>
+          <div className="mt-4 max-w-sm space-y-2">
+            <Label>Documentation Buffer</Label>
 
-                            <SelectContent>
-                                {bufferOptions.map((option) => (
-                                    <SelectItem
-                                        key={option.value}
-                                        value={option.value}
-                                    >
-                                        {option.label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </div>
+            <Select
+              value={String(
+                data.documentationBuffer
+              )}
+              onValueChange={(value) =>
+                onDocumentationBufferChange(
+                  Number(value)
+                )
+              }
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
 
-                <div className="border-t pt-6">
-                    <h3 className="font-medium">
-                        Daily Visit Limit
-                    </h3>
+              <SelectContent>
+                {bufferOptions.map((option) => (
+                  <SelectItem
+                    key={option.value}
+                    value={String(option.value)}
+                  >
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
 
-                    <p className="mt-1 text-sm text-muted-foreground">
-                        Optionally limit how many client visits can be scheduled
-                        in one day.
-                    </p>
+        <div className="border-t pt-6">
+          <h3 className="font-medium">
+            Daily Visit Limit
+          </h3>
 
-                    <div className="mt-4 max-w-sm space-y-2">
-                        <Label htmlFor="max-visits-per-day">
-                            Maximum Visits Per Day
-                        </Label>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Optionally limit how many client visits
+            can be scheduled in one day.
+          </p>
 
-                        <Input
-                            id="max-visits-per-day"
-                            type="number"
-                            min={1}
-                            placeholder="No limit"
-                            value={maxVisitsPerDay}
-                            onChange={(event) =>
-                                setMaxVisitsPerDay(event.target.value)
-                            }
-                        />
-                    </div>
-                </div>
-            </CardContent>
-        </Card>
-    )
+          <div className="mt-4 max-w-sm space-y-2">
+            <Label htmlFor="max-visits-per-day">
+              Maximum Visits Per Day
+            </Label>
+
+            <Input
+              id="max-visits-per-day"
+              type="number"
+              min={1}
+              placeholder="No limit"
+              value={
+                data.maxVisitsPerDay ?? ""
+              }
+              onChange={(event) => {
+                const value =
+                  event.target.value
+
+                onMaxVisitsPerDayChange(
+                  value === ""
+                    ? null
+                    : Math.max(
+                        1,
+                        Number(value)
+                      )
+                )
+              }}
+            />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
 }

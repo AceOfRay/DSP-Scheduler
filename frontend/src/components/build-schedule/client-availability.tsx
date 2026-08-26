@@ -1,6 +1,13 @@
-import * as React from "react"
+import {
+  CalendarDays,
+  Plus,
+  Trash2,
+  Users,
+} from "lucide-react"
 
-import { CalendarDays, Plus, Trash2, Users } from "lucide-react"
+import type {
+  ScheduleConstraintBlockData,
+} from "@/models/schedule-constraint-block"
 
 import {
   Card,
@@ -15,199 +22,77 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
-type TimeWindow = {
-  id: number
-  startTime: string
-  endTime: string
-}
-
-type DayAvailability = {
-  day: string
-  enabled: boolean
-  windows: TimeWindow[]
-}
-
-type ClientAvailability = {
-  id: number
-  name: string
-  availability: DayAvailability[]
-}
-
-const days = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-]
-
-function createDefaultAvailability(): DayAvailability[] {
-  return days.map((day) => ({
-    day,
-    enabled: false,
-    windows: [
-      {
-        id: Date.now() + Math.random(),
-        startTime: "09:00",
-        endTime: "17:00",
-      },
-    ],
-  }))
-}
-
-const initialClients: ClientAvailability[] = [
+const activeClients = [
   {
     id: 1,
     name: "John Smith",
-    availability: createDefaultAvailability(),
   },
   {
     id: 2,
     name: "Maria Garcia",
-    availability: createDefaultAvailability(),
   },
   {
     id: 3,
     name: "David Johnson",
-    availability: createDefaultAvailability(),
+  },
+  {
+    id: 4,
+    name: "Sarah Williams",
   },
 ]
 
-export function ClientAvailability() {
-  const [clients, setClients] =
-    React.useState<ClientAvailability[]>(
-      initialClients
-    )
+type ClientAvailabilityProps = {
+  data: ScheduleConstraintBlockData
 
-  function toggleDay(
+  onToggleDay: (
     clientId: number,
     day: string
-  ) {
-    setClients((current) =>
-      current.map((client) =>
-        client.id === clientId
-          ? {
-              ...client,
-              availability:
-                client.availability.map(
-                  (availability) =>
-                    availability.day === day
-                      ? {
-                          ...availability,
-                          enabled:
-                            !availability.enabled,
-                        }
-                      : availability
-                ),
-            }
-          : client
-      )
-    )
-  }
+  ) => void
 
-  function updateTime(
+  onUpdateTime: (
     clientId: number,
     day: string,
-    windowId: number,
+    windowId: string,
     field: "startTime" | "endTime",
     value: string
-  ) {
-    setClients((current) =>
-      current.map((client) =>
-        client.id === clientId
-          ? {
-              ...client,
-              availability:
-                client.availability.map(
-                  (availability) =>
-                    availability.day === day
-                      ? {
-                          ...availability,
-                          windows:
-                            availability.windows.map(
-                              (window) =>
-                                window.id ===
-                                windowId
-                                  ? {
-                                      ...window,
-                                      [field]:
-                                        value,
-                                    }
-                                  : window
-                            ),
-                        }
-                      : availability
-                ),
-            }
-          : client
-      )
-    )
-  }
+  ) => void
 
-  function addWindow(
+  onAddWindow: (
     clientId: number,
     day: string
-  ) {
-    setClients((current) =>
-      current.map((client) =>
-        client.id === clientId
-          ? {
-              ...client,
-              availability:
-                client.availability.map(
-                  (availability) =>
-                    availability.day === day
-                      ? {
-                          ...availability,
-                          windows: [
-                            ...availability.windows,
-                            {
-                              id: Date.now(),
-                              startTime: "09:00",
-                              endTime: "17:00",
-                            },
-                          ],
-                        }
-                      : availability
-                ),
-            }
-          : client
-      )
-    )
-  }
+  ) => void
 
-  function removeWindow(
+  onRemoveWindow: (
     clientId: number,
     day: string,
-    windowId: number
-  ) {
-    setClients((current) =>
-      current.map((client) =>
-        client.id === clientId
-          ? {
-              ...client,
-              availability:
-                client.availability.map(
-                  (availability) =>
-                    availability.day === day
-                      ? {
-                          ...availability,
-                          windows:
-                            availability.windows.filter(
-                              (window) =>
-                                window.id !==
-                                windowId
-                            ),
-                        }
-                      : availability
-                ),
-            }
-          : client
-      )
+    windowId: string
+  ) => void
+}
+
+export function ClientAvailability({
+  data,
+  onToggleDay,
+  onUpdateTime,
+  onAddWindow,
+  onRemoveWindow,
+}: ClientAvailabilityProps) {
+  const clients =
+    data.clientAvailability.map(
+      (clientAvailability) => {
+        const client = activeClients.find(
+          (client) =>
+            client.id ===
+            clientAvailability.clientId
+        )
+
+        return {
+          ...clientAvailability,
+          name:
+            client?.name ??
+            `Client ${clientAvailability.clientId}`,
+        }
+      }
     )
-  }
 
   return (
     <Card>
@@ -240,7 +125,7 @@ export function ClientAvailability() {
           <div className="space-y-4">
             {clients.map((client) => (
               <div
-                key={client.id}
+                key={client.clientId}
                 className="rounded-lg border p-4"
               >
                 <div className="mb-4">
@@ -262,25 +147,27 @@ export function ClientAvailability() {
                   {client.availability.map(
                     (dayAvailability) => (
                       <div
-                        key={dayAvailability.day}
+                        key={
+                          dayAvailability.day
+                        }
                         className="rounded-md border p-3"
                       >
                         <div className="flex items-center gap-3">
                           <Checkbox
-                            id={`${client.id}-${dayAvailability.day}`}
+                            id={`${client.clientId}-${dayAvailability.day}`}
                             checked={
                               dayAvailability.enabled
                             }
                             onCheckedChange={() =>
-                              toggleDay(
-                                client.id,
+                              onToggleDay(
+                                client.clientId,
                                 dayAvailability.day
                               )
                             }
                           />
 
                           <Label
-                            htmlFor={`${client.id}-${dayAvailability.day}`}
+                            htmlFor={`${client.clientId}-${dayAvailability.day}`}
                             className="font-medium"
                           >
                             {
@@ -318,8 +205,8 @@ export function ClientAvailability() {
                                       onChange={(
                                         event
                                       ) =>
-                                        updateTime(
-                                          client.id,
+                                        onUpdateTime(
+                                          client.clientId,
                                           dayAvailability.day,
                                           window.id,
                                           "startTime",
@@ -347,8 +234,8 @@ export function ClientAvailability() {
                                       onChange={(
                                         event
                                       ) =>
-                                        updateTime(
-                                          client.id,
+                                        onUpdateTime(
+                                          client.clientId,
                                           dayAvailability.day,
                                           window.id,
                                           "endTime",
@@ -369,8 +256,8 @@ export function ClientAvailability() {
                                       variant="ghost"
                                       size="icon"
                                       onClick={() =>
-                                        removeWindow(
-                                          client.id,
+                                        onRemoveWindow(
+                                          client.clientId,
                                           dayAvailability.day,
                                           window.id
                                         )
@@ -388,8 +275,8 @@ export function ClientAvailability() {
                               variant="outline"
                               size="sm"
                               onClick={() =>
-                                addWindow(
-                                  client.id,
+                                onAddWindow(
+                                  client.clientId,
                                   dayAvailability.day
                                 )
                               }
