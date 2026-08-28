@@ -4,6 +4,8 @@ from starlette.routing import Route
 from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
 
+from backend.routes.clients import client_routes
+
 
 async def button_clicked(request):
     print("Frontend button was clicked!")
@@ -14,8 +16,14 @@ async def button_clicked(request):
 
 
 routes = [
-    Route("/api/button-click", button_clicked, methods=["POST"]),
+    Route(
+        "/api/button-click",
+        button_clicked,
+        methods=["POST"],
+    ),
+    *client_routes,
 ]
+
 
 middleware = [
     Middleware(
@@ -25,6 +33,7 @@ middleware = [
         allow_headers=["*"],
     )
 ]
+
 
 app = Starlette(
     routes=routes,

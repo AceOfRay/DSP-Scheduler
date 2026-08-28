@@ -21,22 +21,25 @@ import type {
   ScheduleConstraintBlockData,
 } from "@/models/schedule-constraint-block"
 
+
 type ScheduleReviewProps = {
   data: ScheduleConstraintBlockData
 
   summary: {
-  scheduleStartDate: string | null
-  scheduleEndDate: string | null
-  selectedClients: number
-  personalAppointments: number
-  travelBuffer: number
-  documentationBuffer: number
-}
+    scheduleStartDate: string | null
+    scheduleEndDate: string | null
+    selectedClients: number
+    totalVisits: number
+    totalClientMinutes: number
+    personalAppointments: number
+    travelBuffer: number
+    documentationBuffer: number
+  }
 
   warnings: string[]
-
   onBuildSchedule: () => void
 }
+
 
 function formatMinutes(minutes: number) {
   const hours = Math.floor(minutes / 60)
@@ -53,6 +56,7 @@ function formatMinutes(minutes: number) {
   return `${hours} hr ${remainingMinutes} min`
 }
 
+
 function formatDateRange(
   startDate: string | null,
   endDate: string | null
@@ -66,6 +70,7 @@ function formatDateRange(
 
   return `${start.toLocaleDateString()} - ${end.toLocaleDateString()}`
 }
+
 
 export function ScheduleReview({
   data,
@@ -126,9 +131,15 @@ export function ScheduleReview({
 
                 <p className="mt-1 font-medium">
                   {summary.selectedClients} selected
-                  clients
                 </p>
 
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {summary.totalVisits} total{" "}
+                  {summary.totalVisits === 1
+                    ? "visit"
+                    : "visits"}{" "}
+                  per week
+                </p>
               </div>
             </div>
           </div>
@@ -142,8 +153,15 @@ export function ScheduleReview({
                   Client Time
                 </p>
 
+                <p className="mt-1 font-medium">
+                  {formatMinutes(
+                    summary.totalClientMinutes
+                  )}
+                </p>
+
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Required across all visits
+                  Required across all selected
+                  client visits
                 </p>
               </div>
             </div>

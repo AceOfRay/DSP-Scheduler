@@ -4,6 +4,8 @@ import type {
   ScheduleConstraintBlockData,
 } from "@/models/schedule-constraint-block"
 
+import type { Client } from "@/components/client-modal"
+
 import { Button } from "@/components/ui/button"
 
 import {
@@ -17,38 +19,13 @@ import {
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 
-const activeClients = [
-  {
-    id: 1,
-    name: "John Smith",
-    location: "Seattle, WA",
-    serviceHours: "40 hours / month",
-  },
-  {
-    id: 2,
-    name: "Maria Garcia",
-    location: "Bellevue, WA",
-    serviceHours: "32 hours / month",
-  },
-  {
-    id: 3,
-    name: "David Johnson",
-    location: "Renton, WA",
-    serviceHours: "24 hours / month",
-  },
-  {
-    id: 4,
-    name: "Sarah Williams",
-    location: "Kent, WA",
-    serviceHours: "36 hours / month",
-  },
-]
 
 type ChooseClientsProps = {
   data: ScheduleConstraintBlockData
+  clients: Client[]
+  loading: boolean
 
   onAddClient: (clientId: number) => void
-
   onRemoveClient: (clientId: number) => void
 
   onSetSelectedClients: (
@@ -56,8 +33,11 @@ type ChooseClientsProps = {
   ) => void
 }
 
+
 export function ChooseClients({
   data,
+  clients,
+  loading,
   onAddClient,
   onRemoveClient,
   onSetSelectedClients,
@@ -79,21 +59,20 @@ export function ChooseClients({
   function toggleAllClients() {
     if (
       selectedClientIds.length ===
-      activeClients.length
+      clients.length
     ) {
       onSetSelectedClients([])
       return
     }
 
     onSetSelectedClients(
-      activeClients.map((client) => client.id)
+      clients.map((client) => client.id)
     )
   }
 
   const allSelected =
-    activeClients.length > 0 &&
-    selectedClientIds.length ===
-      activeClients.length
+    clients.length > 0 &&
+    selectedClientIds.length === clients.length
 
   return (
     <Card>
@@ -117,7 +96,13 @@ export function ChooseClients({
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {activeClients.length === 0 ? (
+        {loading ? (
+          <div className="flex min-h-32 items-center justify-center rounded-lg border border-dashed p-6">
+            <p className="text-sm text-muted-foreground">
+              Loading clients...
+            </p>
+          </div>
+        ) : clients.length === 0 ? (
           <div className="flex min-h-32 flex-col items-center justify-center rounded-lg border border-dashed p-6 text-center">
             <Users className="mb-3 h-8 w-8 text-muted-foreground" />
 
@@ -145,7 +130,7 @@ export function ChooseClients({
             </div>
 
             <div className="space-y-2">
-              {activeClients.map((client) => {
+              {clients.map((client) => {
                 const selected =
                   selectedClientIds.includes(
                     client.id
@@ -183,6 +168,19 @@ export function ChooseClients({
 
                       <span className="text-sm font-normal text-muted-foreground">
                         {client.location}
+                      </span>
+
+                      <span className="text-sm font-normal text-muted-foreground">
+                        {
+                          client.visitRequirements
+                            .visitsPerWeek
+                        }{" "}
+                        visits/week ·{" "}
+                        {
+                          client.visitRequirements
+                            .visitDurationMinutes
+                        }{" "}
+                        min each
                       </span>
 
                       <span className="text-sm font-normal text-muted-foreground">
