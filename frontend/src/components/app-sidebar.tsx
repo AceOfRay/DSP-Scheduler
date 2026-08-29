@@ -56,6 +56,11 @@ const navigation = [
     url: "/data",
     icon: Database,
   },
+          {
+    title: "Me",
+    url: "/me",
+    icon: UserRound,
+  },
   {
     title: "Settings",
     url: "/settings",

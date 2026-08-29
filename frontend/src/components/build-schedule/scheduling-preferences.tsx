@@ -74,7 +74,7 @@ export function SchedulingPreferences({
     <Card>
       <CardHeader>
         <CardTitle>
-          5. Scheduling Preferences
+          4. Scheduling Preferences
         </CardTitle>
 
         <CardDescription>

@@ -21,7 +21,6 @@ import type {
   ScheduleConstraintBlockData,
 } from "@/models/schedule-constraint-block"
 
-
 type ScheduleReviewProps = {
   data: ScheduleConstraintBlockData
 
@@ -37,9 +36,39 @@ type ScheduleReviewProps = {
   }
 
   warnings: string[]
+
   onBuildSchedule: () => void
 }
 
+const dayLabels = {
+  monday: "Monday",
+  tuesday: "Tuesday",
+  wednesday: "Wednesday",
+  thursday: "Thursday",
+  friday: "Friday",
+  saturday: "Saturday",
+  sunday: "Sunday",
+}
+
+function formatTime(time: string) {
+  if (!time) return "—"
+
+  const [hours, minutes] = time.split(":")
+
+  const date = new Date()
+
+  date.setHours(
+    Number(hours),
+    Number(minutes),
+    0,
+    0
+  )
+
+  return date.toLocaleTimeString([], {
+    hour: "numeric",
+    minute: "2-digit",
+  })
+}
 
 function formatMinutes(minutes: number) {
   const hours = Math.floor(minutes / 60)
@@ -56,7 +85,6 @@ function formatMinutes(minutes: number) {
   return `${hours} hr ${remainingMinutes} min`
 }
 
-
 function formatDateRange(
   startDate: string | null,
   endDate: string | null
@@ -65,12 +93,31 @@ function formatDateRange(
     return "Not configured"
   }
 
-  const start = new Date(`${startDate}T00:00:00`)
-  const end = new Date(`${endDate}T00:00:00`)
+  const start = new Date(
+    `${startDate}T00:00:00`
+  )
+
+  const end = new Date(
+    `${endDate}T00:00:00`
+  )
 
   return `${start.toLocaleDateString()} - ${end.toLocaleDateString()}`
 }
 
+function formatAppointmentDate(date: string) {
+  const appointmentDate = new Date(
+    `${date}T00:00:00`
+  )
+
+  return appointmentDate.toLocaleDateString(
+    undefined,
+    {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    }
+  )
+}
 
 export function ScheduleReview({
   data,
@@ -78,13 +125,14 @@ export function ScheduleReview({
   warnings,
   onBuildSchedule,
 }: ScheduleReviewProps) {
-  const readyToBuild = warnings.length === 0
+  const readyToBuild =
+    warnings.length === 0
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>
-          6. Review & Build
+          5. Review & Build
         </CardTitle>
 
         <CardDescription>
@@ -109,12 +157,6 @@ export function ScheduleReview({
                     summary.scheduleStartDate,
                     summary.scheduleEndDate
                   )}
-                </p>
-
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {data.scheduleStartTime}
-                  {" - "}
-                  {data.scheduleEndTime}
                 </p>
               </div>
             </div>
@@ -181,11 +223,151 @@ export function ScheduleReview({
                 </p>
 
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Blocked periods
+                  Blocked commitments
                 </p>
               </div>
             </div>
           </div>
+        </div>
+
+        <Separator />
+
+        <div>
+          <h3 className="font-medium">
+            Weekly Schedule
+          </h3>
+
+          <p className="mt-1 text-sm text-muted-foreground">
+            Your regular working availability as defined in the Me Page
+          </p>
+
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            {Object.entries(
+              data.weeklySchedule
+            ).map(
+              ([day, schedule]) => (
+                <div
+                  key={day}
+                  className="rounded-md bg-muted/50 p-3"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <p className="text-sm font-medium">
+                      {
+                        dayLabels[
+                          day as keyof typeof dayLabels
+                        ]
+                      }
+                    </p>
+
+                    {!schedule.enabled && (
+                      <span className="text-sm text-muted-foreground">
+                        Unavailable
+                      </span>
+                    )}
+                  </div>
+
+                  {schedule.enabled && (
+                    <div className="mt-2 space-y-1">
+                      {schedule.timeSpans.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">
+                          No times configured
+                        </p>
+                      ) : (
+                        schedule.timeSpans.map(
+                          (span) => (
+                            <p
+                              key={span.id}
+                              className="text-sm text-muted-foreground"
+                            >
+                              {formatTime(
+                                span.startTime
+                              )}
+                              {" - "}
+                              {formatTime(
+                                span.endTime
+                              )}
+                            </p>
+                          )
+                        )
+                      )}
+                    </div>
+                  )}
+                </div>
+              )
+            )}
+          </div>
+        </div>
+
+        <Separator />
+
+        <div>
+          <h3 className="font-medium">
+            Personal Appointments
+          </h3>
+
+          <p className="mt-1 text-sm text-muted-foreground">
+            Commitments the scheduler needs to
+            work around.
+          </p>
+
+          {data.personalAppointments.length ===
+          0 ? (
+            <div className="mt-3 rounded-md bg-muted/50 p-3">
+              <p className="text-sm text-muted-foreground">
+                No personal appointments.
+              </p>
+            </div>
+          ) : (
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              {data.personalAppointments.map(
+                (appointment) => (
+                  <div
+                    key={appointment.id}
+                    className="rounded-md bg-muted/50 p-3"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="text-sm font-medium">
+                          {appointment.title}
+                        </p>
+
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          {formatAppointmentDate(
+                            appointment.date
+                          )}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-2 space-y-1">
+                      {appointment.timeSpans.map(
+                        (span) => (
+                          <p
+                            key={span.id}
+                            className="text-sm text-muted-foreground"
+                          >
+                            {formatTime(
+                              span.startTime
+                            )}
+                            {" - "}
+                            {formatTime(
+                              span.endTime
+                            )}
+                          </p>
+                        )
+                      )}
+                    </div>
+
+                    {appointment.location && (
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        {appointment.location}
+                      </p>
+                    )}
+                  </div>
+                )
+              )}
+            </div>
+          )}
         </div>
 
         <Separator />

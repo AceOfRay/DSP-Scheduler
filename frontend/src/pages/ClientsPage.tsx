@@ -36,7 +36,6 @@ import {
 export default function ClientsPage() {
 
   const [clients, setClients] = useState<Client[]>([])
-const [selectedClientIds, setSelectedClientIds] = useState<number[]>([])
 
   const [modalOpen, setModalOpen] =
     useState(false)

@@ -5,14 +5,16 @@ import { AppSidebar } from "@/components/app-sidebar"
 import { Separator } from "@/components/ui/separator"
 
 import {
+  validateBasicScheduleInput,
+} from "@/validation/schedule-validation"
+
+import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
 
 import { SchedulingRange } from "@/components/build-schedule/schedule-range"
-
-import { PersonalAppointments } from "@/components/build-schedule/personal-appointments"
 
 import { ChooseClients } from "@/components/build-schedule/choose-clients"
 
@@ -24,12 +26,19 @@ import { ScheduleReview } from "@/components/build-schedule/schedule-review"
 
 import { ScheduleConstraintBlock } from "@/models/schedule-constraint-block"
 
-import type { ScheduleConstraintBlockData } from "@/models/schedule-constraint-block"
+import type {
+  ScheduleConstraintBlockData,
+} from "@/models/schedule-constraint-block"
 
 import { getClients } from "@/api/clients"
 
-import type { Client } from "@/components/client-modal"
+import {
+  getSchedulingPreferences,
+} from "@/api/me"
 
+import type {
+  Client,
+} from "@/components/client-modal"
 
 export default function BuildSchedulePage() {
   const scheduleBlock = useMemo(
@@ -37,34 +46,49 @@ export default function BuildSchedulePage() {
     []
   )
 
-  const [scheduleData, setScheduleData] =
-    useState<ScheduleConstraintBlockData>(
-      scheduleBlock.getData()
-    )
+  const [
+    validationErrors,
+    setValidationErrors,
+  ] = useState<string[]>([])
+
+  const [
+    scheduleData,
+    setScheduleData,
+  ] = useState<ScheduleConstraintBlockData>(
+    scheduleBlock.getData()
+  )
 
   const [clients, setClients] =
     useState<Client[]>([])
 
-  const [loadingClients, setLoadingClients] =
-    useState(true)
+  const [
+    loadingClients,
+    setLoadingClients,
+  ] = useState(true)
+
+  const [
+    loadingUserSchedule,
+    setLoadingUserSchedule,
+  ] = useState(true)
 
   const activeClients = clients.filter(
     (client) => client.active
   )
 
-  const selectedClients = activeClients.filter(
-    (client) =>
+  const selectedClients =
+    activeClients.filter((client) =>
       scheduleData.selectedClientIds.includes(
         client.id
       )
-  )
+    )
 
-  const totalVisits = selectedClients.reduce(
-    (total, client) =>
-      total +
-      client.visitRequirements.visitsPerWeek,
-    0
-  )
+  const totalVisits =
+    selectedClients.reduce(
+      (total, client) =>
+        total +
+        client.visitRequirements.visitsPerWeek,
+      0
+    )
 
   const totalClientMinutes =
     selectedClients.reduce(
@@ -79,7 +103,8 @@ export default function BuildSchedulePage() {
   useEffect(() => {
     async function loadClients() {
       try {
-        const clientData = await getClients()
+        const clientData =
+          await getClients()
 
         setClients(clientData)
       } catch (error) {
@@ -94,6 +119,40 @@ export default function BuildSchedulePage() {
 
     loadClients()
   }, [])
+
+  useEffect(() => {
+    async function loadUserSchedulingPreferences() {
+      try {
+        const preferences =
+          await getSchedulingPreferences()
+
+        if (!preferences) {
+          return
+        }
+
+        scheduleBlock.setWeeklySchedule(
+          preferences.weeklySchedule
+        )
+
+        scheduleBlock.setPersonalAppointments(
+          preferences.personalAppointments
+        )
+
+        setScheduleData(
+          scheduleBlock.getData()
+        )
+      } catch (error) {
+        console.error(
+          "Failed to load user scheduling preferences:",
+          error
+        )
+      } finally {
+        setLoadingUserSchedule(false)
+      }
+    }
+
+    loadUserSchedulingPreferences()
+  }, [scheduleBlock])
 
   const summary =
     scheduleBlock.getReviewSummary()
@@ -126,9 +185,9 @@ export default function BuildSchedulePage() {
             </h2>
 
             <p className="text-muted-foreground">
-              Configure the time range,
-              appointments, clients, and
-              preferences for your schedule.
+              Configure the scheduling range,
+              clients, rules, and preferences
+              for your schedule.
             </p>
           </div>
 
@@ -157,24 +216,6 @@ export default function BuildSchedulePage() {
                 setScheduleData(
                   scheduleBlock.setScheduleEndTime(
                     endTime
-                  )
-                )
-              }}
-            />
-
-            <PersonalAppointments
-              data={scheduleData}
-              onAddAppointment={(appointment) => {
-                setScheduleData(
-                  scheduleBlock.addPersonalAppointment(
-                    appointment
-                  )
-                )
-              }}
-              onRemoveAppointment={(id) => {
-                setScheduleData(
-                  scheduleBlock.removePersonalAppointment(
-                    id
                   )
                 )
               }}
@@ -322,26 +363,46 @@ export default function BuildSchedulePage() {
               }}
             />
 
-            <ScheduleReview
-              data={scheduleData}
-              summary={{
-                ...summary,
-                totalVisits,
-                totalClientMinutes,
-              }}
-              warnings={warnings}
-              onBuildSchedule={() => {
-                console.log(
-                  "Schedule block:",
-                  scheduleBlock.getData()
-                )
+            {!loadingUserSchedule && (
+              <ScheduleReview
+                data={scheduleData}
+                summary={{
+                  ...summary,
+                  totalVisits,
+                  totalClientMinutes,
+                }}
+                warnings={warnings}
+                onBuildSchedule={() => {
+                  const validation =
+                    validateBasicScheduleInput(
+                      scheduleData
+                    )
 
-                console.log(
-                  "Selected clients:",
-                  selectedClients
-                )
-              }}
-            />
+                  if (!validation.isValid) {
+                    setValidationErrors(
+                      validation.errors.map(
+                        (error) =>
+                          error.message
+                      )
+                    )
+
+                    return
+                  }
+
+                  setValidationErrors([])
+
+                  console.log(
+                    "Schedule block:",
+                    scheduleBlock.getData()
+                  )
+
+                  console.log(
+                    "Selected clients:",
+                    selectedClients
+                  )
+                }}
+              />
+            )}
           </div>
         </main>
       </SidebarInset>

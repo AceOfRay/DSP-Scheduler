@@ -5,6 +5,8 @@ from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
 
 from backend.routes.clients import client_routes
+from backend.routes.me import routes as me_routes
+
 
 
 async def button_clicked(request):
@@ -22,6 +24,7 @@ routes = [
         methods=["POST"],
     ),
     *client_routes,
+    *me_routes,
 ]
 
 

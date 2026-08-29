@@ -1,11 +1,32 @@
+export type TimeSpan = {
+  id: string
+  startTime: string
+  endTime: string
+}
+
 export type PersonalAppointment = {
   id: string
   title: string
   date: string
-  startTime: string
-  endTime: string
+  timeSpans: TimeSpan[]
   location?: string
 }
+
+export type WeeklyScheduleDay = {
+  enabled: boolean
+  timeSpans: TimeSpan[]
+}
+
+export type WeeklySchedule = {
+  monday: WeeklyScheduleDay
+  tuesday: WeeklyScheduleDay
+  wednesday: WeeklyScheduleDay
+  thursday: WeeklyScheduleDay
+  friday: WeeklyScheduleDay
+  saturday: WeeklyScheduleDay
+  sunday: WeeklyScheduleDay
+}
+
 
 export type ScheduleConstraintBlockData = {
   scheduleStartDate: string | null
@@ -35,9 +56,12 @@ export type ScheduleConstraintBlockData = {
   preferAfternoons: boolean
 
   scheduleStyle:
-    | "compact"
-    | "balanced"
-    | "relaxed"
+  | "compact"
+  | "balanced"
+  | "relaxed"
+
+  weeklySchedule: WeeklySchedule
+
 }
 
 export class ScheduleConstraintBlock {
@@ -46,14 +70,42 @@ export class ScheduleConstraintBlock {
   constructor(
     data?: Partial<ScheduleConstraintBlockData>
   ) {
+    const createWorkDay = (): WeeklyScheduleDay => ({
+      enabled: true,
+      timeSpans: [
+        {
+          id: crypto.randomUUID(),
+          startTime: "08:00",
+          endTime: "17:00",
+        },
+      ],
+    })
+
     this.data = {
       scheduleStartDate: null,
       scheduleEndDate: null,
       scheduleStartTime: "08:00",
       scheduleEndTime: "17:00",
 
-      personalAppointments: [],
+      weeklySchedule: {
+        monday: createWorkDay(),
+        tuesday: createWorkDay(),
+        wednesday: createWorkDay(),
+        thursday: createWorkDay(),
+        friday: createWorkDay(),
 
+        saturday: {
+          enabled: false,
+          timeSpans: [],
+        },
+
+        sunday: {
+          enabled: false,
+          timeSpans: [],
+        },
+      },
+
+      personalAppointments: [],
       selectedClientIds: [],
 
       travelBuffer: 30,
@@ -83,14 +135,76 @@ export class ScheduleConstraintBlock {
     return {
       ...this.data,
 
-      personalAppointments: [
-        ...this.data.personalAppointments,
-      ],
+      weeklySchedule: {
+        monday: {
+          ...this.data.weeklySchedule.monday,
+          timeSpans: [
+            ...this.data.weeklySchedule.monday.timeSpans,
+          ],
+        },
+        tuesday: {
+          ...this.data.weeklySchedule.tuesday,
+          timeSpans: [
+            ...this.data.weeklySchedule.tuesday.timeSpans,
+          ],
+        },
+        wednesday: {
+          ...this.data.weeklySchedule.wednesday,
+          timeSpans: [
+            ...this.data.weeklySchedule.wednesday.timeSpans,
+          ],
+        },
+        thursday: {
+          ...this.data.weeklySchedule.thursday,
+          timeSpans: [
+            ...this.data.weeklySchedule.thursday.timeSpans,
+          ],
+        },
+        friday: {
+          ...this.data.weeklySchedule.friday,
+          timeSpans: [
+            ...this.data.weeklySchedule.friday.timeSpans,
+          ],
+        },
+        saturday: {
+          ...this.data.weeklySchedule.saturday,
+          timeSpans: [
+            ...this.data.weeklySchedule.saturday.timeSpans,
+          ],
+        },
+        sunday: {
+          ...this.data.weeklySchedule.sunday,
+          timeSpans: [
+            ...this.data.weeklySchedule.sunday.timeSpans,
+          ],
+        },
+      },
+
+      personalAppointments:
+        this.data.personalAppointments.map(
+          (appointment) => ({
+            ...appointment,
+            timeSpans: [
+              ...appointment.timeSpans,
+            ],
+          })
+        ),
 
       selectedClientIds: [
         ...this.data.selectedClientIds,
       ],
     }
+  }
+
+  setWeeklySchedule(
+    weeklySchedule: WeeklySchedule
+  ) {
+    this.data = {
+      ...this.data,
+      weeklySchedule,
+    }
+
+    return this.getData()
   }
 
   // Scheduling Range
@@ -399,5 +513,18 @@ export class ScheduleConstraintBlock {
 
   isReadyToBuild() {
     return this.getWarnings().length === 0
+  }
+
+
+
+  setPersonalAppointments(
+    personalAppointments: PersonalAppointment[]
+  ) {
+    this.data = {
+      ...this.data,
+      personalAppointments,
+    }
+
+    return this.getData()
   }
 }

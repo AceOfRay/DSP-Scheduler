@@ -86,7 +86,7 @@ export function VisitRules({
     <Card>
       <CardHeader>
         <CardTitle>
-          4. Visit Rules & Travel Buffer
+          3. Visit Rules & Travel Buffer
         </CardTitle>
 
         <CardDescription>

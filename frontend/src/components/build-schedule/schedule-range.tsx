@@ -62,6 +62,12 @@ export function SchedulingRange({
       }
       : undefined
 
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const invalidTimeRange =
+    data.scheduleStartTime >= data.scheduleEndTime
+
   return (
     <Card>
       <CardHeader>
@@ -114,6 +120,9 @@ export function SchedulingRange({
               <Calendar
                 mode="range"
                 selected={dateRange}
+                disabled={{
+                  before: today,
+                }}
                 onSelect={(range) => {
                   onDateRangeChange(
                     range?.from
@@ -123,56 +132,13 @@ export function SchedulingRange({
                       ? format(range.to, "yyyy-MM-dd")
                       : null
                   )
-                }} numberOfMonths={2}
+                }}
+                numberOfMonths={2}
               />
             </PopoverContent>
           </Popover>
         </div>
 
-        <div className="space-y-4">
-          <div>
-            <h3 className="text-sm font-medium">
-              Default Work Hours
-            </h3>
-
-            <p className="text-sm text-muted-foreground">
-              Set the default time window that client visits can
-              be scheduled within.
-            </p>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="schedule-start-time">
-                Start Time
-              </Label>
-
-              <Input
-                id="schedule-start-time"
-                type="time"
-                value={data.scheduleStartTime}
-                onChange={(event) =>
-                  onStartTimeChange(event.target.value)
-                }
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="schedule-end-time">
-                End Time
-              </Label>
-
-              <Input
-                id="schedule-end-time"
-                type="time"
-                value={data.scheduleEndTime}
-                onChange={(event) =>
-                  onEndTimeChange(event.target.value)
-                }
-              />
-            </div>
-          </div>
-        </div>
       </CardContent>
     </Card>
   )

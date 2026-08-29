@@ -1,3 +1,4 @@
+
 import * as React from "react"
 
 import { format } from "date-fns"
@@ -12,7 +13,7 @@ import {
 
 import type {
   PersonalAppointment,
-  ScheduleConstraintBlockData,
+  TimeSpan,
 } from "@/models/schedule-constraint-block"
 
 import { cn } from "@/lib/utils"
@@ -48,7 +49,7 @@ import {
 } from "@/components/ui/popover"
 
 type PersonalAppointmentsProps = {
-  data: ScheduleConstraintBlockData
+  appointments: PersonalAppointment[]
 
   onAddAppointment: (
     appointment: PersonalAppointment
@@ -58,36 +59,106 @@ type PersonalAppointmentsProps = {
 }
 
 export function PersonalAppointments({
-  data,
+  appointments,
   onAddAppointment,
   onRemoveAppointment,
 }: PersonalAppointmentsProps) {
   const [open, setOpen] = React.useState(false)
 
   const [title, setTitle] = React.useState("")
+
   const [date, setDate] =
     React.useState<Date | undefined>()
-  const [startTime, setStartTime] =
-    React.useState("")
-  const [endTime, setEndTime] =
-    React.useState("")
+
+  const [timeSpans, setTimeSpans] =
+    React.useState<TimeSpan[]>([
+      {
+        id: crypto.randomUUID(),
+        startTime: "",
+        endTime: "",
+      },
+    ])
+
   const [location, setLocation] =
     React.useState("")
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const invalidTimeSpans = timeSpans.some(
+    (span) =>
+      !span.startTime ||
+      !span.endTime ||
+      span.startTime >= span.endTime
+  )
+
+  const overlappingTimeSpans = timeSpans.some(
+    (span, index) =>
+      timeSpans.some(
+        (otherSpan, otherIndex) =>
+          index !== otherIndex &&
+          span.startTime &&
+          span.endTime &&
+          otherSpan.startTime &&
+          otherSpan.endTime &&
+          span.startTime < otherSpan.endTime &&
+          span.endTime > otherSpan.startTime
+      )
+  )
 
   function resetForm() {
     setTitle("")
     setDate(undefined)
-    setStartTime("")
-    setEndTime("")
+    setTimeSpans([
+      {
+        id: crypto.randomUUID(),
+        startTime: "",
+        endTime: "",
+      },
+    ])
     setLocation("")
+  }
+
+  function addTimeSpan() {
+    setTimeSpans((current) => [
+      ...current,
+      {
+        id: crypto.randomUUID(),
+        startTime: "",
+        endTime: "",
+      },
+    ])
+  }
+
+  function removeTimeSpan(id: string) {
+    setTimeSpans((current) =>
+      current.filter((span) => span.id !== id)
+    )
+  }
+
+  function updateTimeSpan(
+    id: string,
+    field: "startTime" | "endTime",
+    value: string
+  ) {
+    setTimeSpans((current) =>
+      current.map((span) =>
+        span.id === id
+          ? {
+              ...span,
+              [field]: value,
+            }
+          : span
+      )
+    )
   }
 
   function addAppointment() {
     if (
       !title ||
       !date ||
-      !startTime ||
-      !endTime
+      invalidTimeSpans ||
+      overlappingTimeSpans
     ) {
       return
     }
@@ -96,8 +167,7 @@ export function PersonalAppointments({
       id: crypto.randomUUID(),
       title,
       date: format(date, "yyyy-MM-dd"),
-      startTime,
-      endTime,
+      timeSpans,
       location: location || undefined,
     }
 
@@ -113,7 +183,7 @@ export function PersonalAppointments({
         <div className="flex items-start justify-between gap-4">
           <div>
             <CardTitle>
-              2. Personal Appointments
+              Personal Appointments
             </CardTitle>
 
             <CardDescription className="mt-1">
@@ -146,8 +216,9 @@ export function PersonalAppointments({
                 </DialogTitle>
 
                 <DialogDescription>
-                  Block off time that should not be
-                  used for client visits.
+                  Block off one or more time ranges
+                  that should not be used for client
+                  visits.
                 </DialogDescription>
               </DialogHeader>
 
@@ -200,45 +271,103 @@ export function PersonalAppointments({
                         mode="single"
                         selected={date}
                         onSelect={setDate}
+                        disabled={{
+                          before: today,
+                        }}
                       />
                     </PopoverContent>
                   </Popover>
                 </div>
 
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="appointment-start">
-                      Start Time
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between gap-4">
+                    <Label>
+                      Blocked Times
                     </Label>
 
-                    <Input
-                      id="appointment-start"
-                      type="time"
-                      value={startTime}
-                      onChange={(event) =>
-                        setStartTime(
-                          event.target.value
-                        )
-                      }
-                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addTimeSpan}
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add Time
+                    </Button>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="appointment-end">
-                      End Time
-                    </Label>
+                  {timeSpans.map((span) => (
+                    <div
+                      key={span.id}
+                      className="flex items-end gap-3"
+                    >
+                      <div className="grid flex-1 gap-4 sm:grid-cols-2">
+                        <div className="space-y-2">
+                          <Label>
+                            Start Time
+                          </Label>
 
-                    <Input
-                      id="appointment-end"
-                      type="time"
-                      value={endTime}
-                      onChange={(event) =>
-                        setEndTime(
-                          event.target.value
-                        )
-                      }
-                    />
-                  </div>
+                          <Input
+                            type="time"
+                            value={span.startTime}
+                            onChange={(event) =>
+                              updateTimeSpan(
+                                span.id,
+                                "startTime",
+                                event.target.value
+                              )
+                            }
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label>
+                            End Time
+                          </Label>
+
+                          <Input
+                            type="time"
+                            value={span.endTime}
+                            onChange={(event) =>
+                              updateTimeSpan(
+                                span.id,
+                                "endTime",
+                                event.target.value
+                              )
+                            }
+                          />
+                        </div>
+                      </div>
+
+                      {timeSpans.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() =>
+                            removeTimeSpan(span.id)
+                          }
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+
+                  {invalidTimeSpans && (
+                    <p className="text-sm text-destructive">
+                      Each start time must be before
+                      its end time.
+                    </p>
+                  )}
+
+                  {!invalidTimeSpans &&
+                    overlappingTimeSpans && (
+                      <p className="text-sm text-destructive">
+                        Blocked time ranges cannot
+                        overlap.
+                      </p>
+                    )}
                 </div>
 
                 <div className="space-y-2">
@@ -273,8 +402,8 @@ export function PersonalAppointments({
                   disabled={
                     !title ||
                     !date ||
-                    !startTime ||
-                    !endTime
+                    invalidTimeSpans ||
+                    overlappingTimeSpans
                   }
                 >
                   Add Appointment
@@ -286,7 +415,7 @@ export function PersonalAppointments({
       </CardHeader>
 
       <CardContent>
-        {data.personalAppointments.length === 0 ? (
+        {appointments.length === 0 ? (
           <div className="flex min-h-32 flex-col items-center justify-center rounded-lg border border-dashed p-6 text-center">
             <CalendarIcon className="mb-3 h-8 w-8 text-muted-foreground" />
 
@@ -302,64 +431,72 @@ export function PersonalAppointments({
           </div>
         ) : (
           <div className="space-y-3">
-            {data.personalAppointments.map(
-              (appointment) => (
-                <div
-                  key={appointment.id}
-                  className="flex items-start justify-between gap-4 rounded-lg border p-4"
-                >
-                  <div className="min-w-0">
-                    <p className="font-medium">
-                      {appointment.title}
-                    </p>
+            {appointments.map((appointment) => (
+              <div
+                key={appointment.id}
+                className="flex items-start justify-between gap-4 rounded-lg border p-4"
+              >
+                <div className="min-w-0">
+                  <p className="font-medium">
+                    {appointment.title}
+                  </p>
 
-                    <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1.5">
-                        <CalendarIcon className="h-4 w-4" />
+                  <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-1.5">
+                      <CalendarIcon className="h-4 w-4" />
 
-                        {format(
-                          new Date(
-                            `${appointment.date}T00:00:00`
-                          ),
-                          "EEE, MMM d"
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-1.5">
-                        <Clock className="h-4 w-4" />
-
-                        {appointment.startTime}
-                        {" - "}
-                        {appointment.endTime}
-                      </div>
-
-                      {appointment.location && (
-                        <div className="flex items-center gap-1.5">
-                          <MapPin className="h-4 w-4" />
-
-                          {appointment.location}
-                        </div>
+                      {format(
+                        new Date(
+                          `${appointment.date}T00:00:00`
+                        ),
+                        "EEE, MMM d"
                       )}
                     </div>
+
+                    {appointment.location && (
+                      <div className="flex items-center gap-1.5">
+                        <MapPin className="h-4 w-4" />
+
+                        {appointment.location}
+                      </div>
+                    )}
                   </div>
 
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() =>
-                      onRemoveAppointment(
-                        appointment.id
+                  <div className="mt-3 space-y-1.5">
+                    {appointment.timeSpans.map(
+                      (span) => (
+                        <div
+                          key={span.id}
+                          className="flex items-center gap-1.5 text-sm text-muted-foreground"
+                        >
+                          <Clock className="h-4 w-4" />
+
+                          {span.startTime}
+                          {" - "}
+                          {span.endTime}
+                        </div>
                       )
-                    }
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                    )}
+                  </div>
                 </div>
-              )
-            )}
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() =>
+                    onRemoveAppointment(
+                      appointment.id
+                    )
+                  }
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
           </div>
         )}
       </CardContent>
     </Card>
   )
 }
+

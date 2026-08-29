@@ -80,7 +80,7 @@ export function ChooseClients({
         <div className="flex items-start justify-between gap-4">
           <div>
             <CardTitle>
-              3. Choose Clients
+              2. Choose Clients
             </CardTitle>
 
             <CardDescription className="mt-1">

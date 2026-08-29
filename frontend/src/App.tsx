@@ -8,6 +8,7 @@ import LandingPage from "./pages/LandingPage"
 import PastSchedulesPage from "./pages/PastSchedulesPage"
 import ClientsPage from "./pages/ClientsPage"
 import BuildSchedulePage from "./pages/BuildSchedulePage"
+import MePage from "./pages/MePage"
 
 export default function App() {
   return (
@@ -20,6 +21,7 @@ export default function App() {
       <Route path="/past-schedules" element={<PastSchedulesPage />} />
       <Route path="/clients" element={<ClientsPage />} />
       <Route path="/build-schedule" element={<BuildSchedulePage />} />
+      <Route path="/me" element={<MePage />}/>
     </Routes>
   )
 }
